@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<head>
+    <title>26262626
+    </title>
+    <meta charset="UTF-8">
+</head>
+<body>
+<canvas id="baseshape" width="300" height="600"
+        style="background-color:lightskyblue;border: 2px yellow solid"
+></canvas>
+<canvas id="baseshape1" width="100" height="600"
+        style="background-color:lightskyblue;border: 2px yellow solid"
+></canvas>
+<br/>
+<input type="button" value='开始    游戏' onclick="startgame()"
+       style="padding-left: 5px;padding-right: 5px;margin-right: 10px;margin-top: 5px"/>
+<input type="button" value='重新开始游戏' onclick="restart()"
+       style="padding-left: 5px;padding-right: 5px;margin-right: 10px;margin-top: 5px"/>
+<input type="button" value="暂停    游戏" onclick="pause()"
+       style="padding-left: 5px;padding-right: 5px;margin-right: 10px;margin-top: 5px">
+<input type="button" value="继续    游戏" onclick="resume()"
+       style="padding-left: 5px;padding-right: 5px;margin-right: 10px;margin-top: 5px">
+<script>
+    var bgarray = [];
+    bgarray.length = 20;
+    var bgarrayrow = [];
+    bgarrayrow.length = 10;
+    var shapes = [];
+    var currentshape;
+    var Staticshape;
+    shapes.length = 17;
+    var StaticArray = [];
+    StaticArray.length = 20;
+    var StaticArrayrow = [];
+    StaticArrayrow.length = 10;
+    var speed = 1000;
+    var rotatepoint;
+    var lineCleaning = [];
+    var source = 0;
+    var level = 0;
+    var pauseStatus = 0;
+    var startStatus = 0;
+    var resumeshape = [];
+    var tempindex = null;
+    var tempnextindex;
+    var nextindex = ~~Math.random() * 18;
+
+    document.onkeydown = function (event) {
+        var e = event || window.event || arguments.callee.caller.arguments[0];
+        if (e && e.keyCode == 37) {
+            leftMove();
+        }
+        if (e && e.keyCode == 38) {
+            turnMove();
+        }
+        if (e && e.keyCode == 39) {
+            rightMove();
+        }
+        ;
+        if (e && e.keyCode == 40) {
+            //执行加速下落
+            setTimeout(
+                    function () {
+                        move();
+                        isStatic();
+                    },
+                    speed / 10);
+        }
+    };
+    document.write('<br>');
+    var c = document.getElementById("baseshape");
+    var cxt = c.getContext("2d");
+    cxt.fillStyle = "pink";
+    var c1 = document.getElementById("baseshape1");
+    var context = c1.getContext("2d");
+    context.fillStyle = "blue";
+    context.font = "bold 16px Arial";
+    context.fillRect(0, 0, 10, 10)
+
+    var bgarray = new Array();
+    for (var i = 0; i < 20; i++) {
+        bgarray[i] = new Array();
+        for (var j = 0; j < 10; j++) {
+            bgarray[i][j] = 0;
+        }
+    };
+    var nextShape = function () {
+        nextindex = parseInt(Math.random() * 18);
+        if (tempnextindex != undefined && nextindex === tempnextindex) {
+            nextindex = tempnextindex + 3
+        }
+        tempnextindex = nextindex;
+
+
+        return nextindex;
+
+    };
+    var shape = function () {
+        shapes = [
+            //不能变形
+//            [[1,4],[1,5],[0,5],[0,4]],
+            //0
+            [[0, 4], [0, 5], [1, 4], [1, 5]],
+            //1
+            [[0, 4], [1, 4], [2, 4], [3, 4]],
+            //2
+            [[0, 3], [0, 4], [0, 5], [0, 6]],
+            //3
+            [[0, 5], [1, 5], [2, 4], [2, 5]],
+            //4
+            [[0, 3], [0, 4], [0, 5], [1, 5]],
+            //5
+            [[0, 4], [0, 5], [1, 4], [2, 4]],
+            //6
+            [[0, 4], [1, 4], [1, 5], [1, 6]],
+            //7
+            [[0, 6], [1, 4], [1, 5], [1, 6]],
+            //8
+            [[0, 4], [0, 5], [1, 5], [2, 5]],
+            //9
+            [[0, 4], [0, 5], [0, 6], [1, 4]],
+            //10
+            [[0, 4], [1, 4], [2, 4], [2, 5]],
+            //11
+            [[0, 4], [0, 5], [0, 6], [1, 5]],
+            //12
+            [[0, 4], [1, 4], [1, 5], [2, 4]],
+            //13
+            [[0, 5], [1, 4], [1, 5], [1, 6]],
+            //14
+            [[0, 5], [1, 4], [1, 5], [2, 5]],
+            //15
+            [[0, 4], [0, 5], [1, 3], [1, 4]],
+            //16
+            [[0, 4], [1, 4], [1, 5], [2, 5]],
+            //17
+            [[0, 4], [0, 5], [1, 5], [1, 6]],
+            //18
+            [[0, 5], [1, 4], [1, 5], [2, 4]],
+        ];
+
+        if ((bgarray[0][4] === 0) && (bgarray[0][5] === 0)) {
+//            tempindex = parseInt(Math.random() * 18);
+//            shapes[tempindex]
+            if (tempindex != undefined && tempindex === nextindex) {
+                tempindex = nextindex + 1;
+            } else {
+                tempindex = nextindex;
+                currentshape = shapes[tempindex];
+
+                bgarray[currentshape[0][0]][currentshape[0][1]] = 1;
+                bgarray[currentshape[1][0]][currentshape[1][1]] = 1;
+                bgarray[currentshape[2][0]][currentshape[2][1]] = 1;
+                bgarray[currentshape[3][0]][currentshape[3][1]] = 1;
+                nextShape();
+            }
+
+        } else {
+            return;
+        }
+    };
+    var cleanup = function () {
+        cxt.clearRect(0, 0, 300, 600);
+    };
+    var endgame = function () {
+
+//                bgarray[currentshape[0][0]][currentshape[0][1]] = 0;
+//                bgarray[currentshape[1][0]][currentshape[1][1]] = 0;
+//                bgarray[currentshape[2][0]][currentshape[2][1]] = 0;
+//                bgarray[currentshape[3][0]][currentshape[3][1]] = 0;
+        for (var i = 0; i < bgarray.length; i++) {
+            for (var j = 0; j < 10; j++) {
+                bgarray[i][j] = 0;
+            }
+        }
+        currentshape.length = 0;
+        lineCleaning.length = 0;
+        source = 0;
+    };
+    //暂停游戏
+    var pause = function () {
+        if (pauseStatus === 1) {
+            return;
+        }
+        setTimeout(function () {
+            pauseStatus = 1;
+            resumeshape = [].concat(currentshape);
+            bgarray[currentshape[0][0]][currentshape[0][1]] = 2;
+            bgarray[currentshape[1][0]][currentshape[1][1]] = 2;
+            bgarray[currentshape[2][0]][currentshape[2][1]] = 2;
+            bgarray[currentshape[3][0]][currentshape[3][1]] = 2;
+        }, 1)
+
+        //暂停游戏 并且不再出新块shape()不再执行
+    };
+    //恢复游戏
+    var resume = function () {
+        if (pauseStatus === 0) {
+            return;
+        }
+        bgarray[resumeshape[0][0]][resumeshape[0][1]] = 1;
+        bgarray[resumeshape[1][0]][resumeshape[1][1]] = 1;
+        bgarray[resumeshape[2][0]][resumeshape[2][1]] = 1;
+        bgarray[resumeshape[3][0]][resumeshape[3][1]] = 1;
+        pauseStatus = 0;
+    }
+    var currentposition = function () {
+        for (var i = 0; i < bgarray.length - 1; i++) {
+            if (currentshape != undefined && currentshape.length === 4) {
+                break;
+            } else {
+                for (var j = 0; j < 10; j++) {
+                    if (bgarray[i][j] === 1) {
+                        currentshape.push([i, j]);
+                    }
+                }
+            }
+        }
+        ;
+    }
+    var move = function () {
+//每一次下落就是修改i的值
+        isStatic();
+        currentposition();
+        //如果当前有运动形状
+        if (currentshape != undefined && currentshape.length != 0) {
+            isStatic();
+            bgarray[currentshape[0][0]][currentshape[0][1]] = 0;
+            bgarray[currentshape[1][0]][currentshape[1][1]] = 0;
+            bgarray[currentshape[2][0]][currentshape[2][1]] = 0;
+            bgarray[currentshape[3][0]][currentshape[3][1]] = 0;
+            currentshape[0][0] = currentshape[0][0] + 1;
+            currentshape[1][0] = currentshape[1][0] + 1;
+            currentshape[2][0] = currentshape[2][0] + 1;
+            currentshape[3][0] = currentshape[3][0] + 1;
+            bgarray[currentshape[0][0]][currentshape[0][1]] = 1;
+            bgarray[currentshape[1][0]][currentshape[1][1]] = 1;
+            bgarray[currentshape[2][0]][currentshape[2][1]] = 1;
+            bgarray[currentshape[3][0]][currentshape[3][1]] = 1;
+        }else(startStatus===1&&!currentshape != undefined && currentshape.length != 0) {
+            GameOver()
+        }
+        context.clearRect(0, 0, 100, 600)
+        context.fillText("分数" + source, 30, 30);
+        if (source < 10) {
+            level = 0;
+            context.fillText("级别" + level, 30, 60);
+        } else if (source > 10 && source < 20) {
+            level = 1;
+            context.fillText("级别" + level, 30, 60);
+        } else {
+            level = 2;
+            context.fillText("级别" + level, 30, 60);
+        }
+        if (source != 0) {
+            speed = 100;
+        }
+        if (nextindex != undefined && shapes[0] != undefined) {
+            context.fillRect(10 * shapes[nextindex][0][1], 100 + 10 * shapes[nextindex][0][0], 20, 20);
+            context.fillRect(10 * shapes[nextindex][1][1], 100 + 10 * shapes[nextindex][1][0], 20, 20);
+            context.fillRect(10 * shapes[nextindex][2][1], 100 + 10 * shapes[nextindex][2][0], 20, 20);
+            context.fillRect(10 * shapes[nextindex][3][1], 100 + 10 * shapes[nextindex][3][0], 20, 20);
+        }
+        if (source > 10 && source < 20) {
+            clearInterval(movel);
+            speed = 500;
+            movel = setInterval(move, speed);
+        } else if (source > 20) {
+            clearInterval(movel);
+            speed = 100;
+            movel = setInterval(move, speed);
+        } else {
+            return;
+        }
+    };
+    var isleftMove = function () {
+//    currentposition();
+        //没到游戏边缘 或者左侧没有静止块都可以向左移动形状
+        return (currentshape[3][1] === 0 || currentshape[2][1] === 0 || currentshape[1][1] === 0 || currentshape[0][1] === 0 ||
+        (bgarray[currentshape[0][0]][currentshape[0][1] - 1] === 2) ||
+        (bgarray[currentshape[1][0]][currentshape[1][1] - 1] === 2) ||
+        (bgarray[currentshape[2][0]][currentshape[2][1] - 1] === 2) ||
+        (bgarray[currentshape[3][0]][currentshape[3][1] - 1] === 2));
+
+    };
+    var leftMove = function () {
+        if (isleftMove()) {
+            return;
+        } else {
+            bgarray[currentshape[0][0]][currentshape[0][1]] = 0;
+            bgarray[currentshape[1][0]][currentshape[1][1]] = 0;
+            bgarray[currentshape[2][0]][currentshape[2][1]] = 0;
+            bgarray[currentshape[3][0]][currentshape[3][1]] = 0;
+            currentshape[0][1] = currentshape[0][1] - 1;
+            currentshape[1][1] = currentshape[1][1] - 1;
+            currentshape[2][1] = currentshape[2][1] - 1;
+            currentshape[3][1] = currentshape[3][1] - 1;
+            bgarray[currentshape[0][0]][currentshape[0][1]] = 1;
+            bgarray[currentshape[1][0]][currentshape[1][1]] = 1;
+            bgarray[currentshape[2][0]][currentshape[2][1]] = 1;
+            bgarray[currentshape[3][0]][currentshape[3][1]] = 1;
+        }
+    };
+    //给currentshape数组排序 找旋转原点
+    function asc(x, y) {
+        return x - y;
+    }
+    ;
+    //判断当前运动的形状的坐标是否已经超出游戏区域
+    function isOutofScreen() {
+//        return (currentshape[0][0]<0 || currentshape[0][0]>19 ||
+//                     currentshape[1][0]<0 || currentshape[1][0]>19)
+        for (var i = 0; i < 4; i++) {
+            //纵坐标 y轴值超出游戏区域
+            if (currentshape[i][0] < 0 || currentshape[i][0] > 19 ||
+                    //横坐标 x轴值超出游戏区域
+                    currentshape[i][1] < 0 || currentshape[i][1] > 9) {
+                //当前运动形状已经超出游戏区域 返回true
+                return true;
+            } else {
+                continue;
+            }
+        }
+        ;
+        return false;
+    }
+    ;
+    //判断变形后的形状是否会遮挡已经静止的形状 遮挡返回true
+    function isCover() {
+        for (var i = 0; i < 4; i++) {
+            for (var j = 0; j < 2; j++) {
+                if (bgarray[currentshape[i][j]] === 2) {
+                    return true;
+                } else {
+                    continue;
+                }
+            }
+        }
+        ;
+        return false;
+    }
+    var rotate = function () {
+//        isrotate();
+        isStatic();
+//        var tempisStatic=isStatic();
+//        if(tempisStatic==false){
+        if (currentshape != undefined && currentshape.length != 0) {
+            bgarray[currentshape[0][0]][currentshape[0][1]] = 0;
+            bgarray[currentshape[1][0]][currentshape[1][1]] = 0;
+            bgarray[currentshape[2][0]][currentshape[2][1]] = 0;
+            bgarray[currentshape[3][0]][currentshape[3][1]] = 0;
+            var y1 = currentshape[0][0];
+            var y2 = currentshape[1][0];
+            var y3 = currentshape[2][0];
+            var y4 = currentshape[3][0];
+
+            var x1 = currentshape[0][1];
+            var x2 = currentshape[1][1];
+            var x3 = currentshape[2][1];
+            var x4 = currentshape[3][1];
+            currentshape[0][1] = rotatepointX - rotatepointY + y1;
+            currentshape[0][0] = rotatepointX + rotatepointY - x1;
+            currentshape[1][1] = rotatepointX - rotatepointY + y2;
+            currentshape[1][0] = rotatepointX + rotatepointY - x2;
+            currentshape[2][1] = rotatepointX - rotatepointY + y3;
+            currentshape[2][0] = rotatepointX + rotatepointY - x3;
+            currentshape[3][1] = rotatepointX - rotatepointY + y4;
+            currentshape[3][0] = rotatepointX + rotatepointY - x4;
+
+            var tempisOutofScreen = isOutofScreen();
+            var tempisCover = isCover();
+
+            //当前运动形状超出游戏区域 或者当前运动形状遮挡已经静止的形状
+            if (tempisOutofScreen || tempisCover) {
+                currentshape[0][0] = y1;
+                currentshape[1][0] = y2;
+                currentshape[2][0] = y3;
+                currentshape[3][0] = y4;
+                currentshape[0][1] = x1;
+                currentshape[1][1] = x2;
+                currentshape[2][1] = x3;
+                currentshape[3][1] = x4;
+                bgarray[currentshape[0][0]][currentshape[0][1]] = 1;
+                bgarray[currentshape[1][0]][currentshape[1][1]] = 1;
+                bgarray[currentshape[2][0]][currentshape[2][1]] = 1;
+                bgarray[currentshape[3][0]][currentshape[3][1]] = 1;
+
+//                };
+                //当前形状遮挡其他形状
+
+
+            } else {
+                bgarray[currentshape[0][0]][currentshape[0][1]] = 1;
+                bgarray[currentshape[1][0]][currentshape[1][1]] = 1;
+                bgarray[currentshape[2][0]][currentshape[2][1]] = 1;
+                bgarray[currentshape[3][0]][currentshape[3][1]] = 1;
+                switch (tempindex) {
+                    case 1:
+                        tempindex = 2;
+                        break;
+                    case 2:
+                        tempindex = 1;
+                        break;
+                    case 3:
+                        tempindex = 4;
+                        break;
+                    case 4:
+                        tempindex = 5;
+                        break;
+                    case 5:
+                        tempindex = 6;
+                        break;
+                    case 6:
+                        tempindex = 3;
+                        break;
+                    case 7:
+                        tempindex = 8;
+                        break;
+                    case 8:
+                        tempindex = 9;
+                        break;
+                    case 9:
+                        tempindex = 10;
+                        break;
+                    case 10:
+                        tempindex = 7;
+                        break;
+                    case 11:
+                        tempindex = 12;
+                        break;
+                    case 12:
+                        tempindex = 13;
+                        break;
+                    case 13:
+                        tempindex = 14;
+                        break;
+                    case 14:
+                        tempindex = 11;
+                        break;
+                    case 15:
+                        tempindex = 16;
+                        break;
+                    case 16:
+                        tempindex = 15;
+                        break;
+                    case 17:
+                        tempindex = 18;
+                        break;
+                    case 18:
+                        tempindex = 17;
+                        break;
+                }
+
+            }
+        }
+
+    }
+    var turnMove = function () {
+        switch (tempindex) {
+            case 0:
+                return;
+                break;
+            case 1:
+                //设置旋转中心点
+                if (currentshape != undefined && currentshape.length != 0) {
+                    currentposition();
+                    rotatepointX = currentshape[2][1];
+                    var temparray = [currentshape[0][0], currentshape[1][0], currentshape[2][0], currentshape[3][0]];
+                    temparray.sort(asc);
+                    if (rotatepointX === 1) {
+                        rotatepointY = temparray[1];
+                    } else {
+                        rotatepointY = temparray[2];
+                    }
+                }
+                rotate();
+                rotatepointX = null;
+                rotatepointY = null;
+                break;
+            case 2:
+                //判断当前图形在游戏界面的最左端还是最右端
+                if (currentshape != undefined && currentshape.length != 0) {
+                    rotatepointY = currentshape[2][0];
+
+                    var temparray = [currentshape[0][1], currentshape[1][1], currentshape[2][1], currentshape[3][1]];
+                    temparray.sort(asc);
+                    if (temparray[0] === 0) {
+                        rotatepointX = temparray[1];
+                    } else {
+                        rotatepointX = temparray[2];
+                    }
+
+                }
+                rotate();
+                rotatepointX = null;
+                rotatepointY = null;
+                break;
+
+            case 3:
+                if (currentshape != undefined && currentshape.length != 0) {
+                    var temparray = [currentshape[0][0], currentshape[1][0], currentshape[2][0], currentshape[3][0]];
+                    temparray.sort(asc);
+                    rotatepointY = temparray[3] - 1;
+                    temparray.length = 0;
+                    temparray = [currentshape[0][1], currentshape[1][1], currentshape[2][1], currentshape[3][1]];
+                    temparray.sort(asc);
+                    rotatepointX = temparray[3] - 1;
+                }
+                rotate();
+                rotatepointX = null;
+                rotatepointY = null;
+                break;
+            case 4:
+                if (currentshape != undefined && currentshape.length != 0) {
+                    var temparray = [currentshape[0][0], currentshape[1][0], currentshape[2][0], currentshape[3][0]];
+                    temparray.sort(asc);
+                    rotatepointY = temparray[3];
+                    temparray.length = 0;
+                    temparray = [currentshape[0][1], currentshape[1][1], currentshape[2][1], currentshape[3][1]];
+                    temparray.sort(asc);
+                    rotatepointX = temparray[1];
+                }
+                rotate();
+                rotatepointX = null;
+                rotatepointY = null;
+                break;
+            case 5:
+                if (currentshape != undefined && currentshape.length != 0) {
+                    var temparray = [currentshape[0][0], currentshape[1][0], currentshape[2][0], currentshape[3][0]];
+                    temparray.sort(asc);
+                    rotatepointY = temparray[2];
+                    temparray.length = 0;
+                    temparray = [currentshape[0][1], currentshape[1][1], currentshape[2][1], currentshape[3][1]];
+                    temparray.sort(asc);
+                    rotatepointX = temparray[3];
+                }
+                rotate();
+                rotatepointX = null;
+                rotatepointY = null;
+                break;
+            case 6:
+                if (currentshape != undefined && currentshape.length != 0) {
+                    var temparray = [currentshape[0][0], currentshape[1][0], currentshape[2][0], currentshape[3][0]];
+                    temparray.sort(asc);
+                    rotatepointY = temparray[0];
+                    temparray.length = 0;
+                    temparray = [currentshape[0][1], currentshape[1][1], currentshape[2][1], currentshape[3][1]];
+                    temparray.sort(asc);
+                    rotatepointX = temparray[2];
+                }
+                rotate();
+                rotatepointX = null;
+                rotatepointY = null;
+                break;
+            case 7:
+                if (currentshape != undefined && currentshape.length != 0) {
+                    var temparray = [currentshape[0][0], currentshape[1][0], currentshape[2][0], currentshape[3][0]];
+                    temparray.sort(asc);
+                    rotatepointY = temparray[0];
+                    temparray.length = 0;
+                    temparray = [currentshape[0][1], currentshape[1][1], currentshape[2][1], currentshape[3][1]];
+                    temparray.sort(asc);
+                    rotatepointX = temparray[1];
+                }
+                rotate();
+                rotatepointX = null;
+                rotatepointY = null;
+                break;
+            case 8:
+                if (currentshape != undefined && currentshape.length != 0) {
+                    var temparray = [currentshape[0][0], currentshape[1][0], currentshape[2][0], currentshape[3][0]];
+                    temparray.sort(asc);
+                    rotatepointY = temparray[2];
+                    temparray.length = 0;
+                    temparray = [currentshape[0][1], currentshape[1][1], currentshape[2][1], currentshape[3][1]];
+                    temparray.sort(asc);
+                    rotatepointX = temparray[0];
+                }
+                rotate();
+                rotatepointX = null;
+                rotatepointY = null;
+                break;
+            case 9:
+                if (currentshape != undefined && currentshape.length != 0) {
+                    var temparray = [currentshape[0][0], currentshape[1][0], currentshape[2][0], currentshape[3][0]];
+                    temparray.sort(asc);
+                    rotatepointY = temparray[3];
+                    temparray.length = 0;
+                    temparray = [currentshape[0][1], currentshape[1][1], currentshape[2][1], currentshape[3][1]];
+                    temparray.sort(asc);
+                    rotatepointX = temparray[2];
+                }
+                rotate();
+                rotatepointX = null;
+                rotatepointY = null;
+                break;
+            case 10:
+                if (currentshape != undefined && currentshape.length != 0) {
+                    var temparray = [currentshape[0][0], currentshape[1][0], currentshape[2][0], currentshape[3][0]];
+                    temparray.sort(asc);
+                    rotatepointY = temparray[1];
+                    temparray.length = 0;
+                    temparray = [currentshape[0][1], currentshape[1][1], currentshape[2][1], currentshape[3][1]];
+                    temparray.sort(asc);
+                    rotatepointX = temparray[3];
+                }
+                rotate();
+                rotatepointX = null;
+                rotatepointY = null;
+                break;
+            case 11:
+                if (currentshape != undefined && currentshape.length != 0) {
+                    var temparray = [currentshape[0][0], currentshape[1][0], currentshape[2][0], currentshape[3][0]];
+                    temparray.sort(asc);
+                    rotatepointY = temparray[3];
+                    temparray.length = 0;
+                    temparray = [currentshape[0][1], currentshape[1][1], currentshape[2][1], currentshape[3][1]];
+                    temparray.sort(asc);
+                    rotatepointX = temparray[1];
+                }
+                rotate();
+                rotatepointX = null;
+                rotatepointY = null;
+                break;
+            case 12:
+                if (currentshape != undefined && currentshape.length != 0) {
+                    var temparray = [currentshape[0][0], currentshape[1][0], currentshape[2][0], currentshape[3][0]];
+                    temparray.sort(asc);
+                    rotatepointY = temparray[1];
+                    temparray.length = 0;
+                    temparray = [currentshape[0][1], currentshape[1][1], currentshape[2][1], currentshape[3][1]];
+                    temparray.sort(asc);
+                    rotatepointX = temparray[3];
+                }
+                rotate();
+                rotatepointX = null;
+                rotatepointY = null;
+                break;
+            case 13:
+                if (currentshape != undefined && currentshape.length != 0) {
+                    var temparray = [currentshape[0][0], currentshape[1][0], currentshape[2][0], currentshape[3][0]];
+                    temparray.sort(asc);
+                    rotatepointY = temparray[0];
+                    temparray.length = 0;
+                    temparray = [currentshape[0][1], currentshape[1][1], currentshape[2][1], currentshape[3][1]];
+                    temparray.sort(asc);
+                    rotatepointX = temparray[1];
+                }
+                rotate();
+                rotatepointX = null;
+                rotatepointY = null;
+                break;
+            case 14:
+                if (currentshape != undefined && currentshape.length != 0) {
+                    var temparray = [currentshape[0][0], currentshape[1][0], currentshape[2][0], currentshape[3][0]];
+                    temparray.sort(asc);
+                    rotatepointY = temparray[1];
+                    temparray.length = 0;
+                    temparray = [currentshape[0][1], currentshape[1][1], currentshape[2][1], currentshape[3][1]];
+                    temparray.sort(asc);
+                    rotatepointX = temparray[0];
+                }
+                rotate();
+                rotatepointX = null;
+                rotatepointY = null;
+                break;
+            case 15:
+                if (currentshape != undefined && currentshape.length != 0) {
+                    var temparray = [currentshape[0][0], currentshape[1][0], currentshape[2][0], currentshape[3][0]];
+                    temparray.sort(asc);
+                    rotatepointY = temparray[3];
+                    temparray.length = 0;
+                    temparray = [currentshape[0][1], currentshape[1][1], currentshape[2][1], currentshape[3][1]];
+                    temparray.sort(asc);
+                    rotatepointX = temparray[1];
+                }
+                rotate();
+                rotatepointX = null;
+                rotatepointY = null;
+                break;
+            case 16:
+                if (currentshape != undefined && currentshape.length != 0) {
+                    var temparray = [currentshape[0][0], currentshape[1][0], currentshape[2][0], currentshape[3][0]];
+                    temparray.sort(asc);
+                    rotatepointY = temparray[2];
+                    temparray.length = 0;
+                    temparray = [currentshape[0][1], currentshape[1][1], currentshape[2][1], currentshape[3][1]];
+                    temparray.sort(asc);
+                    rotatepointX = temparray[3];
+                }
+                rotate();
+                rotatepointX = null;
+                rotatepointY = null;
+                break;
+            case 17:
+                if (currentshape != undefined && currentshape.length != 0) {
+                    var temparray = [currentshape[0][0], currentshape[1][0], currentshape[2][0], currentshape[3][0]];
+                    temparray.sort(asc);
+                    rotatepointY = temparray[3];
+                    temparray.length = 0;
+                    temparray = [currentshape[0][1], currentshape[1][1], currentshape[2][1], currentshape[3][1]];
+                    temparray.sort(asc);
+                    rotatepointX = temparray[2];
+                }
+                rotate();
+                rotatepointX = null;
+                rotatepointY = null;
+                break;
+            case 18:
+                if (currentshape != undefined && currentshape.length != 0) {
+                    var temparray = [currentshape[0][0], currentshape[1][0], currentshape[2][0], currentshape[3][0]];
+                    temparray.sort(asc);
+                    rotatepointY = temparray[2];
+                    temparray.length = 0;
+                    temparray = [currentshape[0][1], currentshape[1][1], currentshape[2][1], currentshape[3][1]];
+                    temparray.sort(asc);
+                    rotatepointX = temparray[3];
+                }
+                rotate();
+                rotatepointX = null;
+                rotatepointY = null;
+                break;
+
+        }
+    };
+    var isrightMove = function () {
+        //没到游戏边缘 或者左侧没有静止块都可以向左移动形状
+        return (currentshape[3][1] === 9 || currentshape[2][1] === 9 || currentshape[1][1] === 9 || currentshape[0][1] === 9 ||
+        (bgarray[currentshape[0][0]][currentshape[0][1] + 1] === 2) ||
+        (bgarray[currentshape[1][0]][currentshape[1][1] + 1] === 2) ||
+        (bgarray[currentshape[2][0]][currentshape[2][1] + 1] === 2) ||
+        (bgarray[currentshape[3][0]][currentshape[3][1] + 1] === 2));
+
+    };
+    var rightMove = function () {
+        if (isrightMove()) {
+            return;
+        } else {
+            bgarray[currentshape[0][0]][currentshape[0][1]] = 0;
+            bgarray[currentshape[1][0]][currentshape[1][1]] = 0;
+            bgarray[currentshape[2][0]][currentshape[2][1]] = 0;
+            bgarray[currentshape[3][0]][currentshape[3][1]] = 0;
+            currentshape[0][1] = currentshape[0][1] + 1;
+            currentshape[1][1] = currentshape[1][1] + 1;
+            currentshape[2][1] = currentshape[2][1] + 1;
+            currentshape[3][1] = currentshape[3][1] + 1;
+            bgarray[currentshape[0][0]][currentshape[0][1]] = 1;
+            bgarray[currentshape[1][0]][currentshape[1][1]] = 1;
+            bgarray[currentshape[2][0]][currentshape[2][1]] = 1;
+            bgarray[currentshape[3][0]][currentshape[3][1]] = 1;
+        }
+
+    };
+    //分数计算函数 遍历数组 如果有一行所有元素状态都是2 将这行去掉
+    var sourceCount = function () {
+        for (var i = 0; i < bgarray.length; i++) {
+            for (var j = 0; j < 10; j++) {
+                bgarray[i][j] = 2;
+
+            }
+        }
+    };
+    var Cleanline = function () {
+        //找到满足清除条件的行 把行号（y轴坐标）放到数组lineCleaning中保存
+        for (var i = 0; i < bgarray.length; i++) {
+            var count = 0;
+            for (var j = 0; j < 10; j++) {
+                if (bgarray[i][j] === 2) {
+
+                    count = count + 1;
+                    if (count === 10) {
+                        lineCleaning.push(i);
+                    }
+                }
+            }
+        }
+        ;
+        source = source + lineCleaning.length;
+        if (lineCleaning.length != 0) {
+            for (var i = 0; i < lineCleaning.length; i++) {
+                for (var j = 0; j < 10; j++) {
+                    bgarray[lineCleaning[i]][j] = 0;
+
+                }
+            }
+            ;
+        }
+        ;
+        //遍历二维数组的每一行
+        for (var i = 0; i < bgarray.length; i++) {
+            //遍历可以消除的行号
+            for (var k = 0; k < lineCleaning.length; k++) {
+                //如果当前行是可以消除的行
+                if (i === lineCleaning[k]) {
+                    //把当前行的块状态修改为0
+                    for (var j = 0; j < 10; j++) {
+                        bgarray[i][j] = 0;
+                        //把状态是2的行号小于当前行（i）的都+1
+                        for (var m = 19; m >= 0; m--) {
+                            if (bgarray[m][j] === 2 && m < i) {
+                                bgarray[m + 1][j] = bgarray[m][j];
+                                bgarray[m][j] = 0;
+                            }
+                        }
+                    }
+                }
+
+            }
+        }
+        //修改i行以上的行号  依次+1
+        lineCleaning = [];
+    }
+    var shapeFunc = function () {
+        //currentshape【0】【0】中的元素是y轴值currentshape【0】【1】中的元素是x轴值
+        for (var i = 0; i < bgarray.length; i++) {
+            for (var j = 0; j < 10; j++) {
+                if (bgarray[i][j] === 1) {
+                    cxt.fillStyle = "#539d63"
+                    cxt.fillRect(j * 30, i * 30, 30, 30);
+                } else if (bgarray[i][j] === 2) {
+                    cxt.fillStyle = "#0d7222"
+                    cxt.fillRect(j * 30, i * 30, 30, 30);
+                } else {
+                    cxt.fillStyle = "blue"
+                }
+            }
+        }
+    }
+    var isStatic = function () {
+//当前块的y轴坐标已经达到最大值，产生下一个形状
+        if (currentshape != undefined && currentshape.length != 0) {
+            if ((currentshape[3][0]) === 19 || (currentshape[2][0]) === 19 || (currentshape[1][0]) === 19 || (currentshape[0][0]) === 19) {
+                bgarray[currentshape[3][0]][currentshape[3][1]] = 2;
+                bgarray[currentshape[2][0]][currentshape[2][1]] = 2;
+                bgarray[currentshape[1][0]][currentshape[1][1]] = 2;
+                bgarray[currentshape[0][0]][currentshape[0][1]] = 2;
+                currentshape = [];
+                Cleanline();
+                shape();
+
+                return true;
+            }
+            ;
+            //当前块的y轴最大坐标已经接触到了静止块，将当前块变为静止，产生下一个形状
+            if (bgarray[currentshape[3][0] + 1][currentshape[3][1]] === 2 || bgarray[currentshape[2][0] + 1][currentshape[2][1]] === 2 ||
+                    bgarray[currentshape[1][0] + 1][currentshape[1][1]] === 2 || bgarray[currentshape[0][0] + 1][currentshape[0][1]] === 2) {
+                bgarray[currentshape[3][0]][currentshape[3][1]] = 2;
+                bgarray[currentshape[3][0]][currentshape[3][1]] = 2;
+                bgarray[currentshape[2][0]][currentshape[2][1]] = 2;
+                bgarray[currentshape[1][0]][currentshape[1][1]] = 2;
+                bgarray[currentshape[0][0]][currentshape[0][1]] = 2;
+                currentshape = [];
+                //判断当前游戏是否被暂停
+                if (pauseStatus === 1) {
+                    return;
+                }
+                Cleanline();
+                shape();
+                return true;
+            }
+            ;
+        } else {
+            return false;
+        }
+
+    };
+    var startgame = function () {
+        if (startStatus === 1) {
+            return;
+        }
+        startStatus = 1;
+        nextShape();
+        shape();
+
+    }
+    var restart = function () {
+        endgame();
+        shape();
+    };
+    var GameOver = function () {
+        clearInterval(refresh);
+        clearInterval(movel);
+        alert('gameover');
+
+    };
+    var Fresh = function () {
+        cleanup();
+        shapeFunc();
+
+    };
+    var refresh = setInterval(Fresh, 50);
+    var movel = setInterval(move, speed);
+</script>
+</body>
+</html>
